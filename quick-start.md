@@ -39,24 +39,37 @@ Let's the code
 import WagPay, { PaymentInterface } from "wagpay";
 
 // Initiate the Class
-const wagpay = new WagPay("API_KEY_HERE");
+const wag = new WagPay('API_KEY_HERE')
 
 // Create a Payment Intent Object
 // WagPay provides an Interface for creating Payment Intent Object
-const intent: PaymentInterface = {
-    value: 20,
-    from_email: 'email',
-    currency: ['solana', 'ethereum', 'usdcsol', 'usdceth'],
-    receiving_store: 'store_slug'
-};
+let pay: PaymentInterface = {
+	value: 1,
+	from_data: {
+		email: 'punekar.satyam@gmail.com',
+		name: 'Satyam Kulkarni'
+	},
+	title: 'Salt Bae',
+	description: "A Fancy Resto",
+	products: [
+		{
+			name: 'Satyam',
+			description: 'dsadas',
+			value: 12
+		}
+	],
+	orderId: "#122",
+	webhook_urls: [""],
+	currency: ['ethereum', 'matic', 'solana', 'usdceth', 'usdcmatic', 'usdcsol']
+}
 
 // Create a Payment Intent for a user
-const paymentIntent = await wagpay.createPaymentIntent(intent);
+let id = await wag.createPaymentIntent(pay)
 
 // To confirm payment
 // This promise will resolve to true if payment is successful
 // and will resolve to false, if payment is not made within 10mins
-const confirmed = await wagpay.checkPayment(paymentIntent);
+let check = await wag.checkPayment(id)
 ```
 {% endtab %}
 {% endtabs %}
