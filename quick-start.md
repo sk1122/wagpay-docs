@@ -6,11 +6,13 @@
 
 ## Get your API keys
 
-Your API requests are authenticated using API keys. Any request that doesn't include an API key will return an error.
+Oh wait⚡
 
-You can generate an API key from your [Dashboard](https://wagpay.xyz/dashboard) at any time.
+You don't need any API Keys or permission from us to use WagPay SDK or for bridging tokens
 
-## Install the library
+Truly Permissionless
+
+## Install the `@wagpay/sdk`
 
 The best way to interact with our API is to use one of our official libraries:
 
@@ -18,58 +20,82 @@ The best way to interact with our API is to use one of our official libraries:
 {% tab title="Node" %}
 ```
 # Install via NPM
-npm install --save wagpay
+npm install --save @wagpay/sdk @wagpay/types
 
 # Install via yarn
-yarn add wagpay
+yarn add @wagpay/sdk @wagpay/types
 ```
 {% endtab %}
 {% endtabs %}
 
-## Start Accepting Crypto Payments
+## Fetching Available Routes
 
-WagPay works on Payment Intent Model, where you have to create an Intent of Payment on behalf of user, you will receive a unique payment link, user will be redirected there, they will complete the payment and you will receive confirmation that payment is received
+Before doing actual swapping, you need to get available routes for tokens between chains you want to swap
 
-Let's the code
+In this example, we will swap `USDC on Polygon` to `ETH on Ethereum`
+
+Routes in WagPay are combination of DEX(s) and Bridge(s) paired in a way so that user needs to pay as less fees as possible and receive higher returns as possible within lowest time
+
+#### Route Interface
+
+```typescript
+interface Routes {
+	name: string // Name of the Bridge
+	bridgeTime: string // Avg time the bridge will take
+	contractAddress: string // contract address of WagPay Provider for that bridge
+	amountToGet: string // avg amount you will receive on toChain
+	transferFee: string // bridge fees + dex fees + gas fees
+	uniswapData: UniswapData
+	route: RouteResponse
+}
+
+interface RouteResponse {
+	fromChain: string // chain id of from chain
+	toChain: string // chain id of to chain 
+	fromToken: Token
+	toToken: Token
+	amount: string // amount that user is sending (in wei)
+}
+
+interface DexData {
+	dex: string // dex address
+	fees: number // fees of dex
+	chainId: number // chain id on which we have to use dex
+	fromToken: Token 
+	toToken: Token
+	amountToGet: number // amount user will receive after swapping
+}
+
+interface Token {
+	chainAgnositcId: CoinKey // CoinKey is an enum of all the coins (tokens) supported by WagPay
+	symbol: string // Symbol of Token
+	name: string // Name of Token on respective chain
+	address: string // address of the token
+	decimals: number // decimals of the token
+	chainId: ChainId // chain id out of which token is based
+}
+```
+
+#### Let's get some routes for `USDC on Polygon to ETH on Ethereum`&#x20;
 
 {% tabs %}
 {% tab title="Node" %}
 ```javascript
-// Import WagPay
-import WagPay, { PaymentInterface } from "wagpay";
+import WagPay, { ChainId, CoinKey } from "@wagpay/sdk"
+const wagpay = new WagPay()
 
-// Initiate the Class
-const wag = new WagPay('API_KEY_HERE')
-
-// Create a Payment Intent Object
-// WagPay provides an Interface for creating Payment Intent Object
-let pay: PaymentInterface = {
-	value: 1,
-	from_data: {
-		email: 'punekar.satyam@gmail.com',
-		name: 'Satyam Kulkarni'
-	},
-	title: 'Salt Bae',
-	description: "A Fancy Resto",
-	products: [
-		{
-			name: 'Satyam',
-			description: 'dsadas',
-			value: 12
-		}
-	],
-	orderId: "#122",
-	webhook_urls: [""],
-	currency: ['ethereum', 'matic', 'solana', 'usdceth', 'usdcmatic', 'usdcsol']
+let query: RouteData = {
+	fromChain: ChainId.ETH,
+ 	toChain: ChainId.POL,
+ 	fromToken: CoinKey.ETH,
+ 	toToken: CoinKey.MATIC, 
+ 	amount: '1000000000000000000' // in wei
 }
 
-// Create a Payment Intent for a user
-let id = await wag.createPaymentIntent(pay)
-
-// To confirm payment
-// This promise will resolve to true if payment is successful
-// and will resolve to false, if payment is not made within 10mins
-let check = await wag.checkPayment(id)
+wagpay.getRoutes(query)
+  .then(routes => {
+     console.log(routes)
+  })
 ```
 {% endtab %}
 {% endtabs %}
